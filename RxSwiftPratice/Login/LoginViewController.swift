@@ -40,7 +40,6 @@ class LoginViewController: UIViewController {
         
         
         button.isEnabled = false
-//        button.isEnabled = true
         button.backgroundColor = .gray
         button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         button.layer.cornerRadius = 10
@@ -50,6 +49,21 @@ class LoginViewController: UIViewController {
         
         return button
     }()
+    
+    private lazy var loginIdLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont(name: "Helvetica-Bold", size: 12)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var loginPasswordLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont(name: "Helvetica-Bold", size: 12)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     
     var loginViewModel: LoginViewModel!
     let loginManger = LoginManager()
@@ -74,7 +88,9 @@ class LoginViewController: UIViewController {
         [
             idTextField,
             passwordTextField,
-            loginButton
+            loginButton,
+            loginIdLabel,
+            loginPasswordLabel
         ].forEach{
             view.addSubview($0)
         }
@@ -87,13 +103,22 @@ class LoginViewController: UIViewController {
             idTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 30),
             idTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -30),
             
-            passwordTextField.topAnchor.constraint(equalTo: idTextField.topAnchor,constant: 40),
+            passwordTextField.topAnchor.constraint(equalTo: idTextField.bottomAnchor,constant: 10),
             passwordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 30),
             passwordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -30),
             
-            loginButton.topAnchor.constraint(equalTo: passwordTextField.topAnchor,constant: 40),
+            loginButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor,constant: 10),
             loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 30),
             loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -30),
+            
+            
+            loginIdLabel.topAnchor.constraint(equalTo: loginButton.bottomAnchor,constant: 100),
+            loginIdLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 30),
+            loginIdLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -30),
+            
+            loginPasswordLabel.topAnchor.constraint(equalTo: loginIdLabel.bottomAnchor,constant: 20),
+            loginPasswordLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 30),
+            loginPasswordLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -30),
             
             
         ])
@@ -108,6 +133,14 @@ class LoginViewController: UIViewController {
             .bind(to: loginViewModel.passwordRelay)
             .disposed(by: disposeBag)
     
+        loginButton.rx.tap
+            .withUnretained(self)
+            .bind{ vc, _ in
+                vc.loginViewModel.login()
+            }
+            .disposed(by: disposeBag)
+        
+        //output
         let isValid = loginViewModel.isValid
              .share()
          
@@ -120,32 +153,30 @@ class LoginViewController: UIViewController {
              .bind(to: loginButton.rx.backgroundColor)
              .disposed(by: disposeBag)
         
-        loginButton.rx.tap
-            .withUnretained(self)
-            .bind{ vc, _ in
-                vc.loginViewModel.login()
-            }
+        loginViewModel.loginSuccessIdLabel
+            .bind(to: loginIdLabel.rx.text)
             .disposed(by: disposeBag)
         
+        loginViewModel.loginSuccessPasswordLabel
+            .bind(to: loginPasswordLabel.rx.text)
+            .disposed(by: disposeBag)
+
     }
     
 }
 
-class BaseViewController: LoginViewController{
-    
-}
 
-//#if canImport(SwiftUI) && DEBUG
-//import SwiftUI
-//
-//struct LoginViewController_Preview: PreviewProvider {
-//    static var previews: some View {
-//        Group{
-//            LoginViewController().showPreview(.iPhone15Pro)
-//                .previewLayout(.sizeThatFits)
-//          
-//        }
-//        
-//    }
-//}
-//#endif
+#if canImport(SwiftUI) && DEBUG
+import SwiftUI
+
+struct LoginViewController_Preview: PreviewProvider {
+    static var previews: some View {
+        Group{
+            LoginViewController().showPreview(.iPhone15Pro)
+                .previewLayout(.sizeThatFits)
+          
+        }
+        
+    }
+}
+#endif

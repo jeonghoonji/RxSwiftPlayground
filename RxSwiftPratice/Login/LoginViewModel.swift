@@ -26,6 +26,8 @@ class LoginViewModel {
     let idRelay = BehaviorRelay<String>(value: "아이디 입력")
     let passwordRelay = BehaviorRelay<String>(value: "비밀번호 입력")
     
+    
+    // output
     var isValid: Observable<Bool>{
         return Observable
             .combineLatest(idRelay,passwordRelay)
@@ -34,13 +36,42 @@ class LoginViewModel {
             }
     }
     
+    // output
+    private let loginSuccessSubject = PublishSubject<Bool>()
+    
+    var loginSuccess: Observable<Bool>{
+        return loginSuccessSubject.asObservable()
+    }
+    
+    var loginSuccessIdLabel: Observable<String>{
+        return loginSuccess
+            .map{ [weak self] success in
+                guard success, let loginInfo = self?.loginDataManager.getLoginInfo(), let id = loginInfo.first?.id else {
+                    return "실패"
+                }
+                return "id : " + id
+            }
+    }
+    var loginSuccessPasswordLabel: Observable<String>{
+        return loginSuccess
+            .map{ [weak self] success in
+                guard success, let loginInfo = self?.loginDataManager.getLoginInfo(), let password = loginInfo.last?.password else {
+                    return "실패"
+                }
+                return "password : " + password
+            }
+    }
+    
+    // 로그인 결과값 Manager을 통해 관리
     func login()  {
         loginService.login { result in
             switch result {
             case .success(let loginResponse):
                 self.loginDataManager.setLoginInfo([loginResponse])
+                self.loginSuccessSubject.onNext(true)
             case .failure(let error):
                 print("Error: \(error)")
+                self.loginSuccessSubject.onNext(false)
             }
         }
     }

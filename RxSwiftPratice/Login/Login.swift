@@ -12,6 +12,3 @@ struct Login: Codable{
     let password : String
 }
 
-struct LoginResponse {
-    let sucess : Bool
-}
